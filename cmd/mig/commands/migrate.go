@@ -6,9 +6,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Migrate(ctx context.Context) Command {
+type Runner interface {
+	Run(ctx context.Context) error
+}
+
+func Migrate(ctx context.Context, r Runner) Command {
 	return func(c *cobra.Command, args []string) error {
-		c.Println("migrating...")
+		if err := r.Run(ctx); err != nil {
+			return err
+		}
+
 		return nil
 	}
 }

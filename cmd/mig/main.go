@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/arthurdotwork/mig/cmd/mig/commands"
+	"github.com/arthurdotwork/mig/internal/runner"
 	"github.com/spf13/cobra"
 )
 
@@ -22,6 +23,8 @@ func main() {
 		cancel()
 	}()
 
+	r := runner.New()
+
 	rootCmd := &cobra.Command{
 		Use:   "mig",
 		Short: "mig is a tool for managing database migrations",
@@ -30,7 +33,7 @@ func main() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "migrate",
 		Short: "run the migrations",
-		RunE:  commands.Migrate(ctx),
+		RunE:  commands.Migrate(ctx, r),
 	})
 
 	if err := rootCmd.Execute(); err != nil {
