@@ -1,4 +1,4 @@
-package mig
+package config
 
 import (
 	"errors"
@@ -7,6 +7,11 @@ import (
 	"path/filepath"
 
 	"gopkg.in/yaml.v3"
+)
+
+const (
+	// DefaultMigrationsDir is the default name of the migrations directory
+	DefaultMigrationsDir = "migrations"
 )
 
 // DatabaseConfig represents the configuration for the database connection
@@ -30,8 +35,8 @@ type Config struct {
 	Migrations MigrationsConfig `yaml:"migrations"`
 }
 
-// LoadConfig loads the configuration from the specified file
-func LoadConfig(path string) (*Config, error) {
+// Load loads the configuration from the specified file
+func Load(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
@@ -71,15 +76,15 @@ func LoadConfig(path string) (*Config, error) {
 	}
 
 	// Validate the configuration
-	if err := validateConfig(&config); err != nil {
+	if err := validate(&config); err != nil {
 		return nil, err
 	}
 
 	return &config, nil
 }
 
-// CreateDefaultConfig creates a default configuration file
-func CreateDefaultConfig(path string) error {
+// CreateDefault creates a default configuration file
+func CreateDefault(path string) error {
 	// Create a default configuration
 	config := Config{}
 
@@ -108,8 +113,8 @@ func CreateDefaultConfig(path string) error {
 	return nil
 }
 
-// validateConfig validates the configuration
-func validateConfig(config *Config) error {
+// validate validates the configuration
+func validate(config *Config) error {
 	if config.Database.Host == "" {
 		return errors.New("database host is required")
 	}
