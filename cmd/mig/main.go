@@ -127,7 +127,7 @@ func setupLogger(level string) {
 func showHelp() {
 	fmt.Printf("Migrator version %s\n\n", mig.Version)
 	fmt.Println("Usage:")
-	fmt.Println("  migrator [options] <command> [arguments]")
+	fmt.Println("  mig [options] <command> [arguments]")
 	fmt.Println()
 	fmt.Println("Options:")
 	flag.PrintDefaults()
@@ -170,21 +170,15 @@ func cmdCreate(ctx context.Context, args []string) error {
 	}
 	name := strings.Join(cmdFlags.Args(), "_")
 
-	// Load the configuration
-	cfg, err := mig.LoadConfig(configPath)
+	// Create a new migrator
+	m, err := mig.New(configPath)
 	if err != nil {
 		return err
 	}
-
-	// Create the manager
-	manager, err := mig.NewManager(cfg)
-	if err != nil {
-		return err
-	}
-	defer manager.Close() //nolint:errcheck
+	defer m.Close() //nolint:errcheck
 
 	// Create the migration
-	filename, err := manager.CreateMigration(name)
+	filename, err := m.CreateMigration(name)
 	if err != nil {
 		return err
 	}
@@ -263,31 +257,36 @@ func cmdStatus(ctx context.Context, args []string) error {
 	defer m.Close() //nolint:errcheck
 
 	// Get the status
-	migrations, applied, err := m.Status()
+	statuses, err := m.Status()
 	if err != nil {
 		return err
-	}
-
-	// Create a map of applied migrations for quick lookup
-	appliedMap := make(map[string]bool)
-	for _, m := range applied {
-		appliedMap[m.Version] = true
 	}
 
 	// Display the status
 	fmt.Println("Migration Status:")
 	fmt.Println("=================")
-	fmt.Printf("Total: %d, Applied: %d, Pending: %d\n\n", len(migrations), len(applied), len(migrations)-len(applied))
+
+	// Count applied migrations
+	appliedCount := 0
+	for _, status := range statuses {
+		if status.Applied {
+			appliedCount++
+		}
+	}
+
+	fmt.Printf("Total: %d, Applied: %d, Pending: %d\n\n", len(statuses), appliedCount, len(statuses)-appliedCount)
 
 	// Display the list of migrations
-	if len(migrations) > 0 {
+	if len(statuses) > 0 {
 		fmt.Println("Migrations:")
-		for _, m := range migrations {
-			status := "PENDING"
-			if appliedMap[m.ID] {
-				status = "APPLIED"
+		for _, status := range statuses {
+			statusText := "PENDING"
+			appliedAt := ""
+			if status.Applied {
+				statusText = "APPLIED"
+				appliedAt = status.AppliedAt
 			}
-			fmt.Printf("  %-10s  %s  %s\n", status, m.CreatedAt.Format("2006-01-02 15:04:05"), m.ID)
+			fmt.Printf("  %-10s  %s  %s\n", statusText, appliedAt, status.ID)
 		}
 	} else {
 		fmt.Println("No migrations found")
