@@ -76,7 +76,7 @@ func Load(path string) (*Config, error) {
 	}
 
 	// Validate the configuration
-	if err := validate(&config); err != nil {
+	if err := Validate(&config); err != nil {
 		return nil, err
 	}
 
@@ -113,8 +113,8 @@ func CreateDefault(path string) error {
 	return nil
 }
 
-// validate validates the configuration
-func validate(config *Config) error {
+// Validate validates the configuration
+func Validate(config *Config) error {
 	if config.Database.Host == "" {
 		return errors.New("database host is required")
 	}
