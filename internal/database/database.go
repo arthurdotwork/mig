@@ -29,14 +29,13 @@ const (
 
 // MigrationVersion represents a record in the mig_versions table
 type MigrationVersion struct {
-	ID        int       // Database ID
-	Version   string    // Migration version (same as Migration.ID)
-	AppliedAt time.Time // When the migration was applied
+	ID        int
+	Version   string
+	AppliedAt time.Time
 }
 
 // Connect establishes a connection to the PostgreSQL database
 func Connect(cfg *config.Config) (*sql.DB, error) {
-	// Construct the connection string
 	connStr := fmt.Sprintf(
 		"host=%s port=%d dbname=%s user=%s password=%s sslmode=%s",
 		cfg.Database.Host,
@@ -47,15 +46,12 @@ func Connect(cfg *config.Config) (*sql.DB, error) {
 		cfg.Database.SSLMode,
 	)
 
-	// Open the database connection
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}
 
-	// Test the connection
 	if err := db.Ping(); err != nil {
-		db.Close() //nolint:errcheck
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
@@ -64,12 +60,10 @@ func Connect(cfg *config.Config) (*sql.DB, error) {
 
 // InitializeTables creates the necessary migration tables if they don't exist
 func InitializeTables(db *sql.DB) error {
-	// Create the mig_versions table
 	if _, err := db.Exec(CreateVersionTableSQL); err != nil {
 		return fmt.Errorf("failed to create mig_versions table: %w", err)
 	}
 
-	// Create the mig_history table
 	if _, err := db.Exec(CreateHistoryTableSQL); err != nil {
 		return fmt.Errorf("failed to create mig_history table: %w", err)
 	}
